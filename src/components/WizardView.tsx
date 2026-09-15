@@ -131,9 +131,10 @@ export const WizardView: React.FC<WizardViewProps> = ({ config: rawConfig, onCha
 
             <div className="space-y-4 pt-2">
               <div>
-                <label className="text-xs font-semibold text-slate-300">Pilih Mode Distribusi Trafik</label>
-                <div className="mt-2 grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                <label className="text-xs font-semibold text-slate-300">Pilih Mode Distribusi Trafik &amp; Arsitektur WAN</label>
+                <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
                   {[
+                    { id: 'single', title: '1 ISP (Single WAN)', desc: '1 Jalur internet utama standar tanpa mangle (DHCP / Static / PPPoE dial-up)' },
                     { id: 'pcc_equal', title: 'PCC Equal', desc: 'Beban rata seimbang untuk bandwidth ISP yang seimbang' },
                     { id: 'pcc_weighted', title: 'PCC Weighted', desc: 'Beban proporsional sesuai rasio bobot (misal 50M vs 20M)' },
                     { id: 'failover', title: 'Failover Distance', desc: 'ISP backup hanya aktif saat ISP utama putus/RTO' }

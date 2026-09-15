@@ -354,5 +354,99 @@ export const INDUSTRIAL_TEMPLATES: TemplateRecord[] = [
       dropInvalid: true,
       blockDdosRaw: true
     })
+  },
+  {
+    template_id: 'TPL-0013',
+    title: '1 ISP Standar + QoS Gaming, Streaming & Blokir Situs',
+    category: '1 ISP Standar',
+    description: 'Konfigurasi 1 ISP untuk Cafe/Rumah/Gaming. Mangle QoS memprioritaskan Game Online (ML/PUBG/Valorant), streaming YouTube/Netflix, dan blokir situs judi online & konten dewasa.',
+    ros_version: 'v7',
+    config_json: JSON.stringify({
+      routerName: 'MikroTik-1ISP-Gaming-Cafe',
+      rosVersion: 'v7',
+      multiWanMode: 'single',
+      wans: [
+        { id: 'w1', name: 'ether1-WAN', comment: 'ISP-IndiHome', type: 'dhcp', ipAddress: '', gateway: '', weight: 1, distance: 1, checkGateway: true }
+      ],
+      lans: [
+        { id: 'l1', name: 'bridge-lan', ipAddress: '192.168.10.1/24', dhcpEnabled: true, dhcpPoolStart: '192.168.10.10', dhcpPoolEnd: '192.168.10.250', leaseTime: '8h' }
+      ],
+      queue: {
+        type: 'queue_tree',
+        maxUpload: '50M',
+        maxDownload: '100M',
+        qosTrafficSplit: true,
+        qosMode: 'queue_tree',
+        gameUploadLimit: '15M',
+        gameDownloadLimit: '30M',
+        streamingUploadLimit: '20M',
+        streamingDownloadLimit: '50M',
+        browsingUploadLimit: '15M',
+        browsingDownloadLimit: '40M'
+      },
+      siteBlocker: {
+        enabled: true,
+        blockMethod: 'both',
+        blockJudol: true,
+        blockPorn: true,
+        blockTorrent: true,
+        blockSosmed: false,
+        blockStreaming: false,
+        customDomains: []
+      },
+      dnsServers: ['1.1.1.1', '8.8.8.8'],
+      dnsAllowRemote: true,
+      enableFasttrack: true,
+      protectRouter: true,
+      dropInvalid: true,
+      blockDdosRaw: true
+    })
+  },
+  {
+    template_id: 'TPL-0014',
+    title: '1 ISP PPPoE Client Dial-Up (IndiHome / Biznet)',
+    category: '1 ISP Standar',
+    description: 'Dial-up langsung username & password PPPoE dari ISP (Bridge Mode modem ONT). Otomatis mendapatkan IP Public dan default route.',
+    ros_version: 'v7',
+    config_json: JSON.stringify({
+      routerName: 'MikroTik-PPPoE-Client',
+      rosVersion: 'v7',
+      multiWanMode: 'single',
+      wans: [
+        { id: 'w1', name: 'ether1-ONT', comment: 'PPPoE-Dialup', type: 'pppoe', ipAddress: '', gateway: '', pppoeUser: '1234567890@telkom.net', pppoePassword: 'password123', weight: 1, distance: 1, checkGateway: true }
+      ],
+      lans: [
+        { id: 'l1', name: 'bridge-lan', ipAddress: '192.168.88.1/24', dhcpEnabled: true, dhcpPoolStart: '192.168.88.10', dhcpPoolEnd: '192.168.88.254', leaseTime: '12h' }
+      ],
+      queue: {
+        type: 'simple_queue',
+        maxUpload: '30M',
+        maxDownload: '50M',
+        qosTrafficSplit: true,
+        qosMode: 'simple_queue',
+        gameUploadLimit: '10M',
+        gameDownloadLimit: '20M',
+        streamingUploadLimit: '15M',
+        streamingDownloadLimit: '30M',
+        browsingUploadLimit: '10M',
+        browsingDownloadLimit: '25M'
+      },
+      siteBlocker: {
+        enabled: true,
+        blockMethod: 'raw_drop',
+        blockJudol: true,
+        blockPorn: true,
+        blockTorrent: false,
+        blockSosmed: false,
+        blockStreaming: false,
+        customDomains: []
+      },
+      dnsServers: ['1.1.1.1', '8.8.8.8'],
+      dnsAllowRemote: true,
+      enableFasttrack: true,
+      protectRouter: true,
+      dropInvalid: true,
+      blockDdosRaw: true
+    })
   }
 ];

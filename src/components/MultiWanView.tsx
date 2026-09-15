@@ -1,7 +1,7 @@
 import React from 'react';
 import { MikroTikConfig, MultiWanMode, WanInterface } from '../types';
 import { normalizeConfig } from '../utils/generator';
-import { Plus, Trash2, Network, HelpCircle, CheckCircle2, Split, ArrowUpDown, Shuffle, Radio } from 'lucide-react';
+import { Plus, Trash2, Network, HelpCircle, CheckCircle2, Split, ArrowUpDown, Shuffle, Radio, Globe, KeyRound } from 'lucide-react';
 
 interface MultiWanViewProps {
   config: MikroTikConfig;
@@ -54,6 +54,25 @@ export const MultiWanView: React.FC<MultiWanViewProps> = ({ config: rawConfig, o
     });
   };
 
+  const handleSetToOneWan = () => {
+    const firstWan = config.wans[0] || {
+      id: 'w1',
+      name: 'ether1-WAN',
+      comment: 'ISP1',
+      type: 'dhcp',
+      ipAddress: '192.168.1.2/24',
+      gateway: '192.168.1.1',
+      weight: 1,
+      distance: 1,
+      checkGateway: true
+    };
+    onChangeConfig({
+      ...config,
+      multiWanMode: 'single',
+      wans: [firstWan]
+    });
+  };
+
   return (
     <div className="space-y-6">
       {/* Header & Mode Selection */}
@@ -62,25 +81,54 @@ export const MultiWanView: React.FC<MultiWanViewProps> = ({ config: rawConfig, o
           <div>
             <h2 className="text-base font-bold text-white flex items-center gap-2">
               <Network className="h-5 w-5 text-[#00f2fe]" />
-              <span>Multi-WAN &amp; Load Balancing Generator</span>
+              <span>WAN &amp; Multi-ISP Architecture Generator</span>
             </h2>
             <p className="text-xs text-slate-400 mt-1">
-              Konfigurasi hingga 8 ISP secara bersamaan dengan metode PCC, Failover, ECMP, atau Recursive Routing.
+              Dukungan lengkap untuk <strong>1 ISP (Single WAN)</strong> standar maupun Multi-WAN hingga 8 ISP (PCC, Failover, ECMP, Recursive Routing).
             </p>
           </div>
 
-          <button
-            onClick={handleAddWan}
-            disabled={config.wans.length >= 8}
-            className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-[#00f2fe] to-[#4facfe] px-3.5 py-2 text-xs font-bold text-black shadow-md hover:opacity-90 disabled:opacity-40 transition-all self-start md:self-auto"
-          >
-            <Plus className="h-4 w-4" />
-            <span>Tambah WAN ({config.wans.length}/8)</span>
-          </button>
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              onClick={handleSetToOneWan}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-[#00f2fe]/40 bg-[#00f2fe]/10 px-3 py-2 text-xs font-bold text-[#00f2fe] hover:bg-[#00f2fe]/20 transition-all"
+              title="Reset ke setup 1 ISP Standar"
+            >
+              <Globe className="h-3.5 w-3.5" />
+              <span>Set ke 1 ISP</span>
+            </button>
+
+            <button
+              onClick={handleAddWan}
+              disabled={config.wans.length >= 8}
+              className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-[#00f2fe] to-[#4facfe] px-3.5 py-2 text-xs font-bold text-black shadow-md hover:opacity-90 disabled:opacity-40 transition-all self-start md:self-auto"
+            >
+              <Plus className="h-4 w-4" />
+              <span>Tambah WAN ({config.wans.length}/8)</span>
+            </button>
+          </div>
         </div>
 
         {/* Mode Selector Cards */}
-        <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5">
+        <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-2.5">
+          <button
+            type="button"
+            onClick={() => handleModeChange('single')}
+            className={`flex flex-col items-start rounded-lg border p-3 text-left transition-all ${
+              config.multiWanMode === 'single'
+                ? 'border-[#00f2fe] bg-[#00f2fe]/10 text-white shadow-[0_0_12px_rgba(0,242,254,0.15)]'
+                : 'border-[#1f293d] bg-[#0b0f19] text-slate-400 hover:border-slate-700 hover:text-slate-200'
+            }`}
+          >
+            <div className="flex items-center gap-2 font-bold text-xs">
+              <Globe className="h-4 w-4 text-[#00f2fe]" />
+              <span>1 ISP (Single WAN)</span>
+            </div>
+            <span className="mt-1 text-[11px] leading-tight text-slate-400">
+              Standar 1 gateway internet (DHCP/Static/PPPoE) tanpa mangle.
+            </span>
+          </button>
+
           <button
             type="button"
             onClick={() => handleModeChange('pcc_equal')}
@@ -173,6 +221,32 @@ export const MultiWanView: React.FC<MultiWanViewProps> = ({ config: rawConfig, o
         </div>
       </div>
 
+      {/* Single ISP Notice Banner */}
+      {config.multiWanMode === 'single' && (
+        <div className="rounded-xl border border-[#00f2fe]/30 bg-[#00f2fe]/5 p-4 text-xs">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-start gap-2.5">
+              <Globe className="h-5 w-5 text-[#00f2fe] shrink-0 mt-0.5" />
+              <div>
+                <h4 className="font-bold text-white text-sm">Mode 1 ISP (Single WAN) Standar Aktif</h4>
+                <p className="text-slate-300 mt-0.5 text-xs">
+                  Semua trafik keluar diarahkan melalui gateway internet utama <strong>{config.wans[0]?.name || 'ether1'}</strong> ({config.wans[0]?.type.toUpperCase() || 'DHCP'}). Seluruh aturan mangle load balance dimatikan agar beban CPU router ringan dan FastTrack bekerja dengan kecepatan maksimal.
+                </p>
+              </div>
+            </div>
+            {config.wans.length > 1 && (
+              <button
+                type="button"
+                onClick={() => onChangeConfig({ ...config, wans: [config.wans[0]] })}
+                className="shrink-0 rounded-lg bg-[#00f2fe] px-3 py-1.5 text-xs font-bold text-black hover:bg-[#4facfe] transition-all"
+              >
+                Hapus WAN Lain ({config.wans.length - 1})
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* WAN Interfaces List */}
       <div className="space-y-3">
         {config.wans.map((wan, idx) => (
@@ -191,6 +265,11 @@ export const MultiWanView: React.FC<MultiWanViewProps> = ({ config: rawConfig, o
                 <span className="rounded bg-[#0b0f19] px-2 py-0.5 text-[10px] font-mono text-slate-400">
                   {wan.type.toUpperCase()}
                 </span>
+                {config.multiWanMode === 'single' && idx === 0 && (
+                  <span className="rounded bg-[#00f2fe]/20 text-[#00f2fe] px-2 py-0.5 text-[10px] font-semibold">
+                    Primary 1 ISP Gateway
+                  </span>
+                )}
               </div>
 
               <div className="flex items-center gap-3">
@@ -250,19 +329,20 @@ export const MultiWanView: React.FC<MultiWanViewProps> = ({ config: rawConfig, o
 
               <div>
                 <label className="text-[11px] font-semibold text-slate-400 uppercase">
-                  IP Assignment
+                  Metode Koneksi ISP
                 </label>
                 <select
                   value={wan.type}
                   onChange={(e) => handleUpdateWan(idx, { type: e.target.value as any })}
                   className="mt-1 w-full rounded-lg border border-[#1f293d] bg-[#0b0f19] px-3 py-2 text-xs font-semibold text-white focus:border-[#00f2fe] focus:outline-none"
                 >
-                  <option value="static">Static IP</option>
-                  <option value="dhcp">DHCP Client (Dynamic)</option>
+                  <option value="dhcp">DHCP Client (Dynamic / Modem Auto)</option>
+                  <option value="static">Static IP (Manual IP &amp; Gateway)</option>
+                  <option value="pppoe">PPPoE Client (Dial-up IndiHome / Biznet)</option>
                 </select>
               </div>
 
-              {wan.type === 'static' ? (
+              {wan.type === 'static' && (
                 <>
                   <div>
                     <label className="text-[11px] font-semibold text-slate-400 uppercase">
@@ -290,11 +370,43 @@ export const MultiWanView: React.FC<MultiWanViewProps> = ({ config: rawConfig, o
                     />
                   </div>
                 </>
-              ) : (
-                <div className="col-span-2 flex items-center pt-5 text-xs text-[#00ffaa]">
-                  <CheckCircle2 className="h-4 w-4 mr-1.5" />
-                  <span>IP &amp; Gateway akan didapatkan otomatis via DHCP Client</span>
+              )}
+
+              {wan.type === 'dhcp' && (
+                <div className="col-span-1 sm:col-span-2 flex items-center pt-2 text-xs text-[#00ffaa]">
+                  <CheckCircle2 className="h-4 w-4 mr-2 shrink-0" />
+                  <span>IP Address, Subnet &amp; Gateway didapatkan otomatis dari Modem via DHCP Client</span>
                 </div>
+              )}
+
+              {wan.type === 'pppoe' && (
+                <>
+                  <div>
+                    <label className="text-[11px] font-semibold text-slate-400 uppercase">
+                      PPPoE Username
+                    </label>
+                    <input
+                      type="text"
+                      value={wan.pppoeUser || ''}
+                      onChange={(e) => handleUpdateWan(idx, { pppoeUser: e.target.value })}
+                      placeholder="1234567890@telkom.net"
+                      className="mt-1 w-full rounded-lg border border-[#1f293d] bg-[#0b0f19] px-3 py-2 text-xs font-mono text-white focus:border-[#00f2fe] focus:outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-semibold text-slate-400 uppercase">
+                      PPPoE Password
+                    </label>
+                    <input
+                      type="password"
+                      value={wan.pppoePassword || ''}
+                      onChange={(e) => handleUpdateWan(idx, { pppoePassword: e.target.value })}
+                      placeholder="••••••••"
+                      className="mt-1 w-full rounded-lg border border-[#1f293d] bg-[#0b0f19] px-3 py-2 text-xs font-mono text-white focus:border-[#00f2fe] focus:outline-none"
+                    />
+                  </div>
+                </>
               )}
             </div>
 
@@ -310,8 +422,14 @@ export const MultiWanView: React.FC<MultiWanViewProps> = ({ config: rawConfig, o
               </label>
 
               <div className="text-[11px] text-slate-500 font-mono">
-                Mangle Mark: <span className="text-slate-300">{wan.name}_conn</span> &bull; Routing Mark:{' '}
-                <span className="text-slate-300">to_{wan.name}</span>
+                {config.multiWanMode === 'single' ? (
+                  <span className="text-[#00f2fe]">1 ISP Mode: Standar Default Route (No Mangle Overhead)</span>
+                ) : (
+                  <>
+                    Mangle Mark: <span className="text-slate-300">{wan.name}_conn</span> &bull; Routing Mark:{' '}
+                    <span className="text-slate-300">to_{wan.name}</span>
+                  </>
+                )}
               </div>
             </div>
           </div>

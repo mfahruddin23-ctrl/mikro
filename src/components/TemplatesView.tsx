@@ -16,7 +16,7 @@ export const TemplatesView: React.FC<TemplatesViewProps> = ({
   const [selectedCat, setSelectedCat] = useState<string>('All');
   const [loadedId, setLoadedId] = useState<string | null>(null);
 
-  const categories = ['All', 'Load Balancing', 'Routing', 'Hotspot', 'Security', 'QoS & Gaming', 'VPN', 'VLAN & Switching'];
+  const categories = ['All', '1 ISP Standar', 'Load Balancing', 'Routing', 'Hotspot', 'Security', 'QoS & Gaming', 'VPN', 'VLAN & Switching'];
 
   const filtered = INDUSTRIAL_TEMPLATES.filter((tpl) => {
     const matchSearch = (

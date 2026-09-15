@@ -97,18 +97,19 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
           <div>
             <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-              Multi-WAN Mode
+              Mode WAN / Arsitektur ISP
             </label>
             <select
               value={config.multiWanMode}
               onChange={(e) => onChangeConfig({ ...config, multiWanMode: e.target.value as any })}
               className="mt-1 w-full rounded-lg border border-[#1f293d] bg-[#0b0f19] px-3 py-2 text-xs font-semibold text-white focus:border-[#00f2fe] focus:outline-none focus:ring-1 focus:ring-[#00f2fe]"
             >
-              <option value="pcc_equal">PCC Equal (Beban Seimbang)</option>
-              <option value="pcc_weighted">PCC Weighted (Beban Bobot)</option>
-              <option value="failover">Failover (Active / Backup Distance)</option>
-              <option value="ecmp">ECMP (Equal Cost Multi-Path)</option>
-              <option value="recursive">Recursive Routing (Host Ping Check)</option>
+              <option value="single">1 ISP (Single WAN Standar)</option>
+              <option value="pcc_equal">Multi-WAN: PCC Equal (Beban Seimbang)</option>
+              <option value="pcc_weighted">Multi-WAN: PCC Weighted (Beban Bobot)</option>
+              <option value="failover">Multi-WAN: Failover (Active / Backup Distance)</option>
+              <option value="ecmp">Multi-WAN: ECMP (Equal Cost Multi-Path)</option>
+              <option value="recursive">Multi-WAN: Recursive Routing (Host Ping Check)</option>
             </select>
           </div>
 
@@ -155,7 +156,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             {config.wans.length} WAN
           </div>
           <div className="mt-0.5 text-[11px] text-[#00ffaa]">
-            {config.multiWanMode.replace('_', ' ').toUpperCase()}
+            {config.multiWanMode === 'single' ? '1 ISP (SINGLE WAN)' : config.multiWanMode.replace('_', ' ').toUpperCase()}
           </div>
         </div>
 

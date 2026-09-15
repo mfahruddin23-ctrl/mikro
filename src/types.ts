@@ -1,6 +1,6 @@
 export type RosVersion = 'v6' | 'v7';
 
-export type MultiWanMode = 'pcc_equal' | 'pcc_weighted' | 'failover' | 'ecmp' | 'recursive';
+export type MultiWanMode = 'single' | 'pcc_equal' | 'pcc_weighted' | 'failover' | 'ecmp' | 'recursive';
 
 export interface WanInterface {
   id: string;
@@ -12,6 +12,8 @@ export interface WanInterface {
   weight: number;    // for weighted PCC (1-10)
   distance: number;  // for failover
   checkGateway: boolean;
+  pppoeUser?: string;
+  pppoePassword?: string;
 }
 
 export interface LanInterface {

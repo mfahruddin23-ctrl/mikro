@@ -100,6 +100,15 @@ export function validateMikroTikConfig(rawConfig: MikroTikConfig): ValidationSum
           });
         }
       }
+    } else if (wan.type === 'pppoe') {
+      if (!wan.pppoeUser?.trim()) {
+        warnings.push({
+          id: 'warn-pppoe-user-' + idx,
+          type: 'warning',
+          title: 'Username PPPoE Masih Kosong (' + wan.name + ')',
+          message: 'Isi username dial-up dari ISP (misal: no_internet@telkom.net) agar koneksi dapat tersambung.'
+        });
+      }
     }
   });
 
@@ -234,6 +243,16 @@ export function validateMikroTikConfig(rawConfig: MikroTikConfig): ValidationSum
   });
 
   // 7. Safety checklist
+  if (config.multiWanMode === 'single' || config.wans.length === 1) {
+    const primaryWan = config.wans[0];
+    infos.push({
+      id: 'info-single-isp',
+      type: 'info',
+      title: 'Mode 1 ISP (Single WAN) Aktif',
+      message: `Terkoneksi via ${primaryWan?.name || 'ether1'} (${primaryWan?.type.toUpperCase() || 'DHCP'}). Mangle load balancing dinonaktifkan sehingga CPU router bekerja maksimal untuk routing & QoS.`
+    });
+  }
+
   if (config.queue?.qosTrafficSplit) {
     infos.push({
       id: 'info-qos-active',
