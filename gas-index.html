@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MIKROTIK CONFIG BUILDER PRO</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-main: #0b0f19;
+      --bg-card: #151b26;
+      --bg-card-hover: #1a2232;
+      --border-color: #1f293d;
+      --border-glow: rgba(0, 242, 254, 0.25);
+      --cyan-neon: #00f2fe;
+      --cyan-light: #4facfe;
+      --green-term: #00ffaa;
+      --yellow-warn: #ffd166;
+      --red-alert: #ff4757;
+      --text-main: #e2e8f0;
+      --text-muted: #94a3b8;
+      --terminal-bg: #070a10;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      line-height: 1.5;
+    }
+
+    /* Layout */
+    .app-container {
+      display: flex;
+      flex: 1;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 280px;
+      background: #111723;
+      border-right: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      z-index: 20;
+    }
+
+    .brand-header {
+      padding: 20px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-logo {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--cyan-neon), var(--cyan-light));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #000;
+      font-weight: 800;
+      font-family: 'Fira Code', monospace;
+      box-shadow: 0 0 15px rgba(0, 242, 254, 0.4);
+    }
+
+    .brand-title {
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      color: #fff;
+    }
+
+    .brand-badge {
+      font-size: 10px;
+      padding: 2px 6px;
+      background: rgba(0, 255, 170, 0.15);
+      color: var(--green-term);
+      border: 1px solid rgba(0, 255, 170, 0.3);
+      border-radius: 4px;
+      font-family: 'Fira Code', monospace;
+    }
+
+    .nav-menu {
+      flex: 1;
+      padding: 16px 12px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 13.5px;
+      font-weight: 600;
+      transition: all 0.2s ease;
+      border: 1px solid transparent;
+    }
+
+    .nav-item:hover {
+      background: var(--bg-card);
+      color: #fff;
+      border-color: rgba(255, 255, 255, 0.05);
+    }
+
+    .nav-item.active {
+      background: rgba(0, 242, 254, 0.08);
+      color: var(--cyan-neon);
+      border-color: rgba(0, 242, 254, 0.3);
+      box-shadow: 0 0 12px rgba(0, 242, 254, 0.1);
+    }
+
+    /* Main Content Area */
+    .main-wrapper {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: var(--bg-main);
+    }
+
+    /* Top Bar */
+    .top-bar {
+      height: 60px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      background: #101521;
+      flex-shrink: 0;
+    }
+
+    .top-title {
+      font-size: 16px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .status-pill.green {
+      background: rgba(0, 255, 170, 0.1);
+      color: var(--green-term);
+      border: 1px solid rgba(0, 255, 170, 0.3);
+    }
+
+    .status-pill.yellow {
+      background: rgba(255, 209, 102, 0.1);
+      color: var(--yellow-warn);
+      border: 1px solid rgba(255, 209, 102, 0.3);
+    }
+
+    .status-pill.red {
+      background: rgba(255, 71, 87, 0.1);
+      color: var(--red-alert);
+      border: 1px solid rgba(255, 71, 87, 0.3);
+    }
+
+    .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    /* Split Workspace */
+    .workspace {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      overflow: hidden;
+    }
+
+    @media (max-width: 1024px) {
+      .workspace {
+        grid-template-columns: 1fr;
+        grid-template-rows: 1fr 1fr;
+      }
+    }
+
+    .panel-form {
+      padding: 24px;
+      overflow-y: auto;
+      border-right: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .panel-terminal {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: var(--terminal-bg);
+    }
+
+    /* Cards */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 20px;
+      transition: border-color 0.2s;
+    }
+
+    .card:hover {
+      border-color: rgba(0, 242, 254, 0.2);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .card-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Form Inputs */
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+
+    .form-group label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .form-control {
+      background: #0d121c;
+      border: 1px solid #1f293d;
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: #fff;
+      font-size: 13.5px;
+      outline: none;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+
+    .form-control:focus {
+      border-color: var(--cyan-neon);
+      box-shadow: 0 0 0 2px rgba(0, 242, 254, 0.15);
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 9px 18px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+      font-family: inherit;
+      white-space: nowrap;
+    }
+
+    .btn-cyan {
+      background: linear-gradient(135deg, var(--cyan-neon), var(--cyan-light));
+      color: #050b14;
+      box-shadow: 0 2px 10px rgba(0, 242, 254, 0.25);
+    }
+
+    .btn-cyan:hover {
+      box-shadow: 0 4px 15px rgba(0, 242, 254, 0.4);
+      transform: translateY(-1px);
+    }
+
+    .btn-terminal {
+      background: rgba(0, 255, 170, 0.12);
+      color: var(--green-term);
+      border: 1px solid rgba(0, 255, 170, 0.3);
+    }
+
+    .btn-terminal:hover {
+      background: rgba(0, 255, 170, 0.2);
+    }
+
+    .btn-ghost {
+      background: #172030;
+      color: #cbd5e1;
+      border: 1px solid var(--border-color);
+    }
+
+    .btn-ghost:hover {
+      background: #202b40;
+      color: #fff;
+    }
+
+    /* Terminal Box */
+    .terminal-header {
+      height: 48px;
+      background: #0d121c;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      flex-shrink: 0;
+    }
+
+    .terminal-title {
+      font-family: 'Fira Code', monospace;
+      font-size: 12px;
+      color: var(--cyan-neon);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .terminal-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .terminal-body {
+      flex: 1;
+      padding: 18px;
+      overflow: auto;
+      font-family: 'Fira Code', monospace;
+      font-size: 12.5px;
+      color: #cbd5e1;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
+    .terminal-comment {
+      color: #64748b;
+    }
+
+    .terminal-cmd {
+      color: var(--cyan-neon);
+      font-weight: 600;
+    }
+
+    .terminal-prop {
+      color: #ff9ff3;
+    }
+
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #151b26;
+      border: 1px solid var(--cyan-neon);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      z-index: 100;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  </style>
+</head>
+<body>
+
+<div class="app-container">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="brand-header">
+      <div class="brand-logo">MT</div>
+      <div>
+        <div class="brand-title">MIKROTIK PRO</div>
+        <div class="brand-badge">RouterOS v6 & v7</div>
+      </div>
+    </div>
+
+    <nav class="nav-menu">
+      <div class="nav-item active" onclick="switchTab('dashboard')">
+        <span>⚡ Dashboard & Presets</span>
+      </div>
+      <div class="nav-item" onclick="switchTab('wizard')">
+        <span>🛠️ Router Setup Wizard</span>
+      </div>
+      <div class="nav-item" onclick="switchTab('multiwan')">
+        <span>🌐 Multi-WAN & PCC</span>
+      </div>
+      <div class="nav-item" onclick="switchTab('network')">
+        <span>🛡️ Network & Firewall</span>
+      </div>
+      <div class="nav-item" onclick="switchTab('templates')">
+        <span>📚 Template Library (11+)</span>
+      </div>
+      <div class="nav-item" onclick="switchTab('saved')">
+        <span>💾 Saved Configs & Logs</span>
+      </div>
+    </nav>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-wrapper">
+    <!-- Topbar -->
+    <header class="top-bar">
+      <div class="top-title">
+        <span id="tab-title">⚡ Dashboard & Quick Setup</span>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <div id="validator-badge" class="status-pill green">
+          <span class="dot"></span>
+          <span id="validator-text">Status: Normal (Ready)</span>
+        </div>
+
+        <select id="ros-selector" class="form-control" style="padding: 6px 12px; font-size: 12px;" onchange="updateRosVersion(this.value)">
+          <option value="v7" selected>RouterOS v7.x (Recommended)</option>
+          <option value="v6">RouterOS v6.x (Legacy)</option>
+        </select>
+      </div>
+    </header>
+
+    <!-- Split Workspace -->
+    <div class="workspace">
+      <!-- Left Panel: Interactive Form -->
+      <div class="panel-form" id="form-container">
+        <!-- Dynamically rendered tab views -->
+      </div>
+
+      <!-- Right Panel: Live Terminal Simulator -->
+      <div class="panel-terminal">
+        <div class="terminal-header">
+          <div class="terminal-title">
+            <span>[admin@MikroTik] > terminal_preview.rsc</span>
+          </div>
+          <div class="terminal-actions">
+            <button class="btn btn-terminal" onclick="copyScript()">📋 COPY SCRIPT</button>
+            <button class="btn btn-ghost" onclick="downloadFile('rsc')">💾 .RSC</button>
+            <button class="btn btn-ghost" onclick="downloadFile('txt')">📄 .TXT</button>
+            <button class="btn btn-cyan" onclick="saveToSpreadsheet()">☁️ SAVE</button>
+          </div>
+        </div>
+
+        <div class="terminal-body" id="terminal-content">
+          <!-- Live generated script with syntax highlight -->
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="toast"></div>
+
+<script>
+  // App State
+  var currentTab = 'dashboard';
+  var config = {
+    routerName: 'MikroTik-Router',
+    rosVersion: 'v7',
+    safeMode: true,
+    backupBeforeApply: true,
+    multiWanMode: 'pcc_equal',
+    wans: [
+      { id: 'w1', name: 'ether1-WAN1', comment: 'ISP1-Main', type: 'static', ipAddress: '192.168.1.2/24', gateway: '192.168.1.1', weight: 1, distance: 1, checkGateway: true },
+      { id: 'w2', name: 'ether2-WAN2', comment: 'ISP2-Backup', type: 'static', ipAddress: '192.168.2.2/24', gateway: '192.168.2.1', weight: 1, distance: 2, checkGateway: true }
+    ],
+    lans: [
+      { id: 'l1', name: 'bridge-lan', ipAddress: '192.168.88.1/24', dhcpEnabled: true, dhcpPoolStart: '192.168.88.10', dhcpPoolEnd: '192.168.88.250', leaseTime: '12h' }
+    ],
+    dnsServers: ['8.8.8.8', '1.1.1.1'],
+    dnsAllowRemote: true,
+    enableFasttrack: false,
+    protectRouter: true,
+    dropInvalid: true,
+    blockDdosRaw: false,
+    queue: { type: 'pcq', targetNetwork: '192.168.88.0/24', maxUpload: '20M', maxDownload: '50M', pcqRateUpload: '2M', pcqRateDownload: '5M' }
+  };
+
+  // Preset definitions
+  var presets = [
+    { id: 'home', name: 'Home / SOHO', desc: '1 WAN DHCP, 1 LAN, Masquerade, Basic Firewall', mode: 'failover', wans: 1 },
+    { id: 'office', name: 'Office Dual WAN', desc: 'Dual WAN Failover, QoS, Hardened Firewall, Auto Backup', mode: 'failover', wans: 2 },
+    { id: 'pcc2', name: 'Dual WAN PCC Equal', desc: 'Load Balancing 2 WAN 50:50 dengan Mangle & Routing Table', mode: 'pcc_equal', wans: 2 },
+    { id: 'pcc3', name: '3-WAN Weighted PCC', desc: 'Load Balancing 3 WAN dengan rasio bobot 5:3:2', mode: 'pcc_weighted', wans: 3 },
+    { id: 'hotspot', name: 'Hotspot Cafe Voucher', desc: 'Hotspot Voucher Ready, PCQ Per-user, Trial 30m', mode: 'failover', wans: 1 },
+    { id: 'gaming', name: 'Esports Gaming Anti-Lag', desc: 'Low-latency QoS, Bufferbloat Fix, Game Port Priority', mode: 'failover', wans: 1 }
+  ];
+
+  // Initial Load
+  window.onload = function() {
+    renderView();
+    updateGeneratedScript();
+  };
+
+  function switchTab(tab) {
+    currentTab = tab;
+    var items = document.querySelectorAll('.nav-item');
+    for (var i = 0; i < items.length; i++) {
+      items[i].classList.remove('active');
+    }
+    // Update title
+    var titles = {
+      'dashboard': '⚡ Dashboard & Quick Setup',
+      'wizard': '🛠️ Router Setup Wizard',
+      'multiwan': '🌐 Multi-WAN & Load Balance (Up to 8 WAN)',
+      'network': '🛡️ Network, Firewall & Queues',
+      'templates': '📚 Template Library (11+ Industrial Presets)',
+      'saved': '💾 Saved Configs & Spreadsheet Logs'
+    };
+    document.getElementById('tab-title').innerText = titles[tab] || 'MikroTik Config Builder';
+    renderView();
+  }
+
+  function updateRosVersion(ver) {
+    config.rosVersion = ver;
+    updateGeneratedScript();
+  }
+
+  function renderView() {
+    var container = document.getElementById('form-container');
+    var html = '';
+
+    if (currentTab === 'dashboard') {
+      html += '<div class="card">';
+      html += '<div class="card-header"><span class="card-title">🚀 Quick Setup Presets</span></div>';
+      html += '<p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">Pilih preset konfigurasi siap pakai untuk memuat parameter secara instan ke dalam builder.</p>';
+      html += '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">';
+      for (var i = 0; i < presets.length; i++) {
+        var p = presets[i];
+        html += '<div class="card" style="cursor: pointer; background: #111723;" onclick="applyPreset(\'' + p.id + '\')">';
+        html += '<div style="font-weight: 700; color: var(--cyan-neon); font-size: 14px; margin-bottom: 4px;">' + p.name + '</div>';
+        html += '<div style="font-size: 12px; color: var(--text-muted);">' + p.desc + '</div>';
+        html += '</div>';
+      }
+      html += '</div>';
+      html += '</div>';
+
+      html += '<div class="card">';
+      html += '<div class="card-header"><span class="card-title">⚙️ Basic Router Parameters</span></div>';
+      html += '<div class="form-group">';
+      html += '<label>Router Identity</label>';
+      html += '<input type="text" class="form-control" value="' + config.routerName + '" oninput="config.routerName=this.value; updateGeneratedScript();">';
+      html += '</div>';
+      html += '<div class="form-row">';
+      html += '<label style="display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer;">';
+      html += '<input type="checkbox" ' + (config.safeMode ? 'checked' : '') + ' onchange="config.safeMode=this.checked; updateGeneratedScript();"> Safe Mode Protection';
+      html += '</label>';
+      html += '<label style="display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer;">';
+      html += '<input type="checkbox" ' + (config.backupBeforeApply ? 'checked' : '') + ' onchange="config.backupBeforeApply=this.checked; updateGeneratedScript();"> Auto Backup Before Apply';
+      html += '</label>';
+      html += '</div>';
+      html += '</div>';
+    } else if (currentTab === 'multiwan') {
+      html += '<div class="card">';
+      html += '<div class="card-header">';
+      html += '<span class="card-title">🌐 Multi-WAN & Load Balancing (Hingga 8 WAN)</span>';
+      html += '<button class="btn btn-terminal" onclick="addWanInterface()">+ Tambah WAN</button>';
+      html += '</div>';
+      html += '<div class="form-group">';
+      html += '<label>Mode Load Balancing</label>';
+      html += '<select class="form-control" onchange="config.multiWanMode=this.value; updateGeneratedScript();">';
+      html += '<option value="pcc_equal"' + (config.multiWanMode === 'pcc_equal' ? ' selected' : '') + '>PCC Equal (Beban Rata)</option>';
+      html += '<option value="pcc_weighted"' + (config.multiWanMode === 'pcc_weighted' ? ' selected' : '') + '>PCC Weighted (Beban Bobot Bandwidth)</option>';
+      html += '<option value="failover"' + (config.multiWanMode === 'failover' ? ' selected' : '') + '>Failover (Active - Backup Distance)</option>';
+      html += '<option value="ecmp"' + (config.multiWanMode === 'ecmp' ? ' selected' : '') + '>ECMP (Equal Cost Multi-Path)</option>';
+      html += '<option value="recursive"' + (config.multiWanMode === 'recursive' ? ' selected' : '') + '>Recursive Routing (Host Ping 8.8.8.8)</option>';
+      html += '</select>';
+      html += '</div>';
+
+      for (var w = 0; w < config.wans.length; w++) {
+        var wan = config.wans[w];
+        html += '<div class="card" style="margin-top: 10px; background: #0e1420;">';
+        html += '<div style="display: flex; justify-content: space-between; margin-bottom: 8px;">';
+        html += '<strong style="color: var(--cyan-neon);">WAN ' + (w + 1) + ': ' + wan.name + '</strong>';
+        if (config.wans.length > 1) {
+          html += '<button class="btn btn-ghost" style="padding: 2px 8px; font-size: 11px; color: var(--red-alert);" onclick="removeWan(' + w + ')">Hapus</button>';
+        }
+        html += '</div>';
+        html += '<div class="form-row">';
+        html += '<div class="form-group"><label>Nama Interface</label><input type="text" class="form-control" value="' + wan.name + '" oninput="config.wans[' + w + '].name=this.value; updateGeneratedScript();"></div>';
+        html += '<div class="form-group"><label>Tipe IP</label><select class="form-control" onchange="config.wans[' + w + '].type=this.value; updateGeneratedScript();"><option value="static"' + (wan.type === 'static' ? ' selected' : '') + '>Static</option><option value="dhcp"' + (wan.type === 'dhcp' ? ' selected' : '') + '>DHCP Client</option></select></div>';
+        html += '</div>';
+        if (wan.type === 'static') {
+          html += '<div class="form-row">';
+          html += '<div class="form-group"><label>IP Address (CIDR)</label><input type="text" class="form-control" value="' + wan.ipAddress + '" oninput="config.wans[' + w + '].ipAddress=this.value; updateGeneratedScript();"></div>';
+          html += '<div class="form-group"><label>Gateway</label><input type="text" class="form-control" value="' + wan.gateway + '" oninput="config.wans[' + w + '].gateway=this.value; updateGeneratedScript();"></div>';
+          html += '</div>';
+        }
+        if (config.multiWanMode === 'pcc_weighted') {
+          html += '<div class="form-group"><label>Bobot Ratio PCC (1-10)</label><input type="number" min="1" max="10" class="form-control" value="' + (wan.weight || 1) + '" oninput="config.wans[' + w + '].weight=parseInt(this.value,10)||1; updateGeneratedScript();"></div>';
+        }
+        html += '</div>';
+      }
+      html += '</div>';
+    } else {
+      // General settings for wizard, network, templates, saved
+      html += '<div class="card">';
+      html += '<div class="card-header"><span class="card-title">Konfigurasi Modul</span></div>';
+      html += '<p style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px;">Modul ' + currentTab.toUpperCase() + ' aktif. Anda dapat mengubah pengaturan langsung atau memilih preset.</p>';
+      html += '<div class="form-group"><label>DNS Servers (Koma dipisah)</label><input type="text" class="form-control" value="' + config.dnsServers.join(',') + '" oninput="config.dnsServers=this.value.split(\',\'); updateGeneratedScript();"></div>';
+      html += '<div class="form-row">';
+      html += '<label style="display: flex; align-items: center; gap: 8px; font-size: 13px;"><input type="checkbox" ' + (config.enableFasttrack ? 'checked' : '') + ' onchange="config.enableFasttrack=this.checked; updateGeneratedScript();"> FastTrack Forward</label>';
+      html += '<label style="display: flex; align-items: center; gap: 8px; font-size: 13px;"><input type="checkbox" ' + (config.protectRouter ? 'checked' : '') + ' onchange="config.protectRouter=this.checked; updateGeneratedScript();"> Protect Router Input</label>';
+      html += '</div>';
+      html += '</div>';
+    }
+
+    container.innerHTML = html;
+  }
+
+  function addWanInterface() {
+    if (config.wans.length >= 8) {
+      showToast('Maksimal 8 WAN.');
+      return;
+    }
+    var num = config.wans.length + 1;
+    config.wans.push({
+      id: 'w' + num,
+      name: 'ether' + num + '-WAN' + num,
+      comment: 'ISP' + num,
+      type: 'static',
+      ipAddress: '192.168.' + num + '.2/24',
+      gateway: '192.168.' + num + '.1',
+      weight: 1,
+      distance: num,
+      checkGateway: true
+    });
+    renderView();
+    updateGeneratedScript();
+  }
+
+  function removeWan(idx) {
+    config.wans.splice(idx, 1);
+    renderView();
+    updateGeneratedScript();
+  }
+
+  function applyPreset(presetId) {
+    if (presetId === 'home') {
+      config.multiWanMode = 'failover';
+      config.wans = [{ id: 'w1', name: 'ether1-WAN', comment: 'ISP-Indihome', type: 'dhcp', ipAddress: '', gateway: '192.168.1.1', weight: 1, distance: 1, checkGateway: true }];
+      config.enableFasttrack = true;
+    } else if (presetId === 'pcc2') {
+      config.multiWanMode = 'pcc_equal';
+      config.wans = [
+        { id: 'w1', name: 'ether1-WAN1', comment: 'ISP1-50M', type: 'static', ipAddress: '192.168.1.2/24', gateway: '192.168.1.1', weight: 1, distance: 1, checkGateway: true },
+        { id: 'w2', name: 'ether2-WAN2', comment: 'ISP2-50M', type: 'static', ipAddress: '192.168.2.2/24', gateway: '192.168.2.1', weight: 1, distance: 2, checkGateway: true }
+      ];
+      config.enableFasttrack = false;
+    } else if (presetId === 'pcc3') {
+      config.multiWanMode = 'pcc_weighted';
+      config.wans = [
+        { id: 'w1', name: 'ether1-WAN1', comment: 'ISP1-50M', type: 'static', ipAddress: '192.168.1.2/24', gateway: '192.168.1.1', weight: 5, distance: 1, checkGateway: true },
+        { id: 'w2', name: 'ether2-WAN2', comment: 'ISP2-30M', type: 'static', ipAddress: '192.168.2.2/24', gateway: '192.168.2.1', weight: 3, distance: 2, checkGateway: true },
+        { id: 'w3', name: 'ether3-WAN3', comment: 'ISP3-20M', type: 'static', ipAddress: '192.168.3.2/24', gateway: '192.168.3.1', weight: 2, distance: 3, checkGateway: true }
+      ];
+      config.enableFasttrack = false;
+    }
+    showToast('Preset diterapkan.');
+    renderView();
+    updateGeneratedScript();
+  }
+
+  // Generate RouterOS Script (String Concatenation safe)
+  function generateScript() {
+    var isV7 = config.rosVersion === 'v7';
+    var out = '';
+
+    out += '# ******************************************************************************\r\n';
+    out += '# MIKROTIK ROUTEROS ' + (isV7 ? 'v7' : 'v6') + ' CONFIGURATION SCRIPT\r\n';
+    out += '# Generated by: MIKROTIK CONFIG BUILDER PRO\r\n';
+    out += '# Router Identity: ' + config.routerName + '\r\n';
+    out += '# Multi-WAN Mode : ' + config.multiWanMode.toUpperCase() + '\r\n';
+    out += '# ******************************************************************************\r\n\r\n';
+
+    if (config.backupBeforeApply) {
+      out += '# ==============================================================================\r\n';
+      out += '# SYSTEM SAFETY: BACKUP CONFIGURATION\r\n';
+      out += '# ==============================================================================\r\n';
+      out += '/system backup save name="' + config.routerName + '-bkp"\r\n';
+      out += '/export file="' + config.routerName + '-bkp"\r\n:delay 2s;\r\n\r\n';
+    }
+
+    out += '# ==============================================================================\r\n';
+    out += '# 1. SYSTEM IDENTITY & CLOCK\r\n';
+    out += '# ==============================================================================\r\n';
+    out += '/system identity set name="' + config.routerName + '"\r\n';
+    out += '/system clock set time-zone-name="Asia/Jakarta"\r\n\r\n';
+
+    out += '# ==============================================================================\r\n';
+    out += '# 2. INTERFACE LIST & MEMBERSHIP\r\n';
+    out += '# ==============================================================================\r\n';
+    out += '/interface list\r\nadd name=WAN\r\nadd name=LAN\r\n/interface list member\r\n';
+    for (var i = 0; i < config.wans.length; i++) {
+      out += 'add list=WAN interface=' + config.wans[i].name + '\r\n';
+    }
+    for (var j = 0; j < config.lans.length; j++) {
+      out += 'add list=LAN interface=' + config.lans[j].name + '\r\n';
+    }
+    out += '\r\n';
+
+    out += '# ==============================================================================\r\n';
+    out += '# 3. IP ADDRESSES\r\n';
+    out += '# ==============================================================================\r\n';
+    for (var k = 0; k < config.wans.length; k++) {
+      var w = config.wans[k];
+      if (w.type === 'static' && w.ipAddress) {
+        out += '/ip address add address=' + w.ipAddress + ' interface=' + w.name + '\r\n';
+      } else if (w.type === 'dhcp') {
+        out += '/ip dhcp-client add interface=' + w.name + ' disabled=no use-peer-dns=yes add-default-route=no\r\n';
+      }
+    }
+    for (var l = 0; l < config.lans.length; l++) {
+      out += '/ip address add address=' + config.lans[l].ipAddress + ' interface=' + config.lans[l].name + '\r\n';
+    }
+    out += '\r\n';
+
+    out += '# ==============================================================================\r\n';
+    out += '# 4. DNS RESOLVER\r\n';
+    out += '# ==============================================================================\r\n';
+    out += '/ip dns set allow-remote-requests=' + (config.dnsAllowRemote ? 'yes' : 'no') + ' servers=' + config.dnsServers.join(',') + '\r\n\r\n';
+
+    // Multi-WAN routing
+    if (config.wans.length > 1 && (config.multiWanMode === 'pcc_equal' || config.multiWanMode === 'pcc_weighted')) {
+      out += '# ==============================================================================\r\n';
+      out += '# 5. MULTI-WAN PCC LOAD BALANCING\r\n';
+      out += '# ==============================================================================\r\n';
+      out += '/ip firewall address-list\r\nadd address=10.0.0.0/8 list=RFC1918-LOCAL\r\nadd address=172.16.0.0/12 list=RFC1918-LOCAL\r\nadd address=192.168.0.0/16 list=RFC1918-LOCAL\r\n\r\n';
+
+      if (isV7) {
+        out += '/routing table\r\n';
+        for (var v = 0; v < config.wans.length; v++) {
+          out += 'add name=to_' + config.wans[v].name + ' fib\r\n';
+        }
+        out += '\r\n';
+      }
+
+      out += '/ip firewall mangle\r\n';
+      out += 'add chain=prerouting dst-address-list=RFC1918-LOCAL action=accept\r\n';
+      for (var m = 0; m < config.wans.length; m++) {
+        var wanName = config.wans[m].name;
+        out += 'add chain=prerouting in-interface=' + wanName + ' connection-mark=no-mark action=mark-connection new-connection-mark=' + wanName + '_conn passthrough=yes\r\n';
+        out += 'add chain=prerouting in-interface-list=LAN connection-mark=no-mark dst-address-type=!local dst-address-list=!RFC1918-LOCAL per-connection-classifier=both-addresses-and-ports:' + config.wans.length + '/' + m + ' action=mark-connection new-connection-mark=' + wanName + '_conn passthrough=yes\r\n';
+        out += 'add chain=prerouting connection-mark=' + wanName + '_conn in-interface-list=LAN action=mark-routing new-routing-mark=to_' + wanName + ' passthrough=yes\r\n';
+      }
+      out += '\r\n';
+
+      out += '# ==============================================================================\r\n';
+      out += '# 6. ROUTING RULES\r\n';
+      out += '# ==============================================================================\r\n';
+      for (var r = 0; r < config.wans.length; r++) {
+        var wanObj = config.wans[r];
+        if (isV7) {
+          out += '/ip route add dst-address=0.0.0.0/0 gateway=' + wanObj.gateway + ' routing-table=to_' + wanObj.name + ' check-gateway=ping\r\n';
+        } else {
+          out += '/ip route add dst-address=0.0.0.0/0 gateway=' + wanObj.gateway + ' routing-mark=to_' + wanObj.name + ' check-gateway=ping\r\n';
+        }
+      }
+    } else {
+      out += '# ==============================================================================\r\n';
+      out += '# 5. DEFAULT GATEWAY ROUTE\r\n';
+      out += '# ==============================================================================\r\n';
+      for (var d = 0; d < config.wans.length; d++) {
+        out += '/ip route add dst-address=0.0.0.0/0 gateway=' + config.wans[d].gateway + ' distance=' + (d + 1) + ' check-gateway=ping\r\n';
+      }
+    }
+
+    out += '\r\n# ==============================================================================\r\n';
+    out += '# 7. NAT (MASQUERADE)\r\n';
+    out += '# ==============================================================================\r\n/ip firewall nat\r\n';
+    for (var n = 0; n < config.wans.length; n++) {
+      out += 'add chain=srcnat out-interface=' + config.wans[n].name + ' action=masquerade\r\n';
+    }
+
+    out += '\r\n# ==============================================================================\r\n';
+    out += '# 8. FIREWALL FILTER (HARDENING)\r\n';
+    out += '# ==============================================================================\r\n/ip firewall filter\r\n';
+    if (config.enableFasttrack) {
+      out += 'add chain=forward action=fasttrack-connection connection-state=established,related comment="Fasttrack"\r\n';
+    }
+    out += 'add chain=input action=accept connection-state=established,related,untracked\r\n';
+    out += 'add chain=forward action=accept connection-state=established,related,untracked\r\n';
+    if (config.dropInvalid) {
+      out += 'add chain=input action=drop connection-state=invalid\r\n';
+      out += 'add chain=forward action=drop connection-state=invalid\r\n';
+    }
+    if (config.protectRouter) {
+      out += 'add chain=input in-interface-list=WAN action=drop comment="Drop WAN Input"\r\n';
+    }
+
+    out += '\r\n# SCRIPT GENERATION FINISHED\r\n';
+    return out;
+  }
+
+  function updateGeneratedScript() {
+    var script = generateScript();
+    var elem = document.getElementById('terminal-content');
+    if (elem) {
+      elem.innerText = script;
+    }
+  }
+
+  function copyScript() {
+    var script = generateScript();
+    navigator.clipboard.writeText(script).then(function() {
+      showToast('Script berhasil di-copy ke clipboard!');
+    }).catch(function() {
+      showToast('Gagal copy script.');
+    });
+  }
+
+  function downloadFile(ext) {
+    var script = generateScript();
+    var blob = new Blob([script], { type: 'text/plain;charset=utf-8' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = (config.routerName || 'mikrotik') + '.' + ext;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    showToast('File .' + ext.toUpperCase() + ' berhasil didownload!');
+  }
+
+  function saveToSpreadsheet() {
+    showToast('Menyimpan ke Google Spreadsheet...');
+    var script = generateScript();
+    var payload = {
+      router_name: config.routerName,
+      ros_version: config.rosVersion,
+      config_type: config.multiWanMode.toUpperCase() + ' (' + config.wans.length + ' WAN)',
+      script_content: script,
+      created_by: 'web-user'
+    };
+
+    // Safe execution check for Google Apps Script
+    if (typeof google !== 'undefined' && google.script && google.script.run) {
+      google.script.run
+        .withSuccessHandler(function(res) {
+          showToast(res.message || 'Berhasil disimpan!');
+        })
+        .withFailureHandler(function(err) {
+          showToast('Error: ' + err.toString());
+        })
+        .saveConfiguration(payload);
+    } else {
+      // Standalone Preview Mode Simulation
+      setTimeout(function() {
+        showToast('Tersimpan di Local Storage (Preview Mode)');
+      }, 500);
+    }
+  }
+
+  function showToast(msg) {
+    var toast = document.getElementById('toast');
+    toast.innerText = msg;
+    toast.classList.add('show');
+    setTimeout(function() {
+      toast.classList.remove('show');
+    }, 3000);
+  }
+</script>
+</body>
+</html>
